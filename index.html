@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monthly Surrenders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F5F7; --card:#FFFFFF; --ink:#141B26; --muted:#5B6472; --faint:#8A929E;
+  --line:#E2E5EA; --line2:#EDF0F3; --accent:#1F5F8B; --accent-soft:#E6EEF5; --bar:#B9C6D3;
+  --warn:#9A4A14; --warn-ink:#6E3510; --warn-bg:#FBF3EA; --warn-line:#E8C9A8;
+  --good:#2F6B3F; --row-hover:#F1F5F9;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F141B; --card:#171E27; --ink:#E7EBF0; --muted:#A1AAB6; --faint:#76808C;
+    --line:#2A333F; --line2:#222A35; --accent:#6FA8D6; --accent-soft:#1E2C3A; --bar:#3A4757;
+    --warn:#E39A62; --warn-ink:#F0C29E; --warn-bg:#2B1E14; --warn-line:#5A3A22;
+    --good:#7CC08E; --row-hover:#1D2631;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F141B; --card:#171E27; --ink:#E7EBF0; --muted:#A1AAB6; --faint:#76808C;
+  --line:#2A333F; --line2:#222A35; --accent:#6FA8D6; --accent-soft:#1E2C3A; --bar:#3A4757;
+  --warn:#E39A62; --warn-ink:#F0C29E; --warn-bg:#2B1E14; --warn-line:#5A3A22;
+  --good:#7CC08E; --row-hover:#1D2631;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 48px;display:flex;flex-direction:column;gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+header .eyebrow{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+header h1{margin:2px 0 0;font-size:34px;line-height:1.15;font-weight:700;letter-spacing:-.01em}
+.head-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.live{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+.dot.live{background:var(--good)} .dot.stale{background:var(--warn)}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.6;cursor:default}
+.linkbtn{background:none;border:0;padding:0;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.status-card .lbl{font-size:14px;font-weight:600}
+.status-card .num{font:600 42px/1.1 'IBM Plex Mono',ui-monospace,monospace;margin:6px 0 4px}
+.status-card .sub{font-size:13px;color:var(--muted)}
+.status-card.pd .lbl,.status-card.pd .num{color:var(--warn)}
+.status-card.up .lbl,.status-card.up .num{color:var(--accent)}
+.status-card .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.status-card[aria-busy="true"] .num{color:var(--faint)}
+.note{font-size:13px;border-radius:8px;padding:10px 12px;background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-ink);margin-top:10px}
+.tabs-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:14px}
+.tabs-head h2,.sec-head h2{margin:0;font-size:17px;font-weight:600}
+.tabs-head .hint,.sec-head .hint{font-size:13px;color:var(--muted)}
+.tabs-scroll{overflow-x:auto;padding-bottom:4px}
+.tabs{display:grid;grid-template-columns:repeat(13,minmax(68px,1fr));gap:8px;min-width:900px}
+.tab{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tab:hover{border-color:var(--accent)}
+.tab[aria-current="page"]{background:var(--accent-soft);border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.tab .barbox{height:34px;width:22px;display:flex;align-items:flex-end}
+.tab .bar{width:100%;background:var(--bar);border-radius:2px;min-height:2px}
+.tab[aria-current="page"] .bar{background:var(--accent)}
+.tab .cnt{font:600 14px 'IBM Plex Mono',ui-monospace,monospace}
+.tab .mlbl{font-size:12px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
+.kpi .lbl{font-size:13px;font-weight:500;color:var(--muted)}
+.kpi .val{font:600 32px/1.2 'IBM Plex Mono',ui-monospace,monospace;margin:8px 0 4px}
+.kpi .sub{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.kpi.accent .val{color:var(--accent)} .kpi.warn .val{color:var(--warn)}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:16px}
+.coord{width:100%;background:none;border:0;padding:6px 8px;border-radius:6px;text-align:left;display:block}
+.coord:hover{background:var(--row-hover)}
+.coord[aria-pressed="true"]{background:var(--accent-soft)}
+.coord .row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.coord .track{height:6px;background:var(--line2);border-radius:3px;overflow:hidden}
+.coord .fill{height:100%;background:var(--accent);border-radius:3px}
+.coord.un .row span:first-child{color:var(--warn)} .coord.un .fill{background:var(--warn)}
+.chart-wrap{overflow-x:auto}
+.chart{display:block;width:100%;min-width:560px;height:auto}
+.caption{font-size:13px;color:var(--muted);margin-top:8px}
+.table-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.table-head h2{margin:0;font-size:17px;font-weight:600}
+.table-head .sub{font-size:13px;color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+input[type=search]{width:220px;max-width:100%}
+.tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;max-height:560px;overflow-y:auto}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+thead th{position:sticky;top:0;background:var(--line2);text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:10px 12px;letter-spacing:.03em}
+tbody td{padding:10px 12px;border-top:1px solid var(--line2);vertical-align:top}
+tbody tr.r{cursor:pointer}
+tbody tr.r:hover{background:var(--row-hover)}
+tbody tr.r[aria-expanded="true"]{background:var(--accent-soft)}
+td.mat{color:var(--muted)} td.cli{font-weight:600}
+.un-tag{color:var(--warn)}
+.detail td{background:var(--row-hover);padding:14px 16px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 20px;font-size:13px}
+.dgrid .k{color:var(--muted);font-size:12px}
+.dgrid .wide{grid-column:1/-1}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px}
+a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+@media (max-width:520px){.kpis{grid-template-columns:1fr}header h1{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Quill &amp; Arrow · Monthly surrenders</div>
+    <div class="head-row">
+      <h1 id="title">Surrenders</h1>
+      <div class="live"><span class="dot" id="liveDot"></span><span id="liveText">Loading…</span><button class="btn" id="refreshBtn" type="button">Refresh</button></div>
+    </div>
+  </header>
+
+  <div id="pageErr"></div>
+
+  <section class="grid2" aria-label="Surrender status">
+    <div class="card status-card pd" id="pdCard"></div>
+    <div class="card status-card up" id="upCard"></div>
+  </section>
+  <section class="card" id="statusList" hidden></section>
+
+  <section class="card" aria-label="Rolling 13 months">
+    <div class="tabs-head"><h2>Rolling 13 months</h2><span class="hint" id="rangeNote"></span></div>
+    <div class="tabs-scroll"><div class="tabs" id="tabs"></div></div>
+    <div id="countsErr"></div>
+  </section>
+
+  <section class="kpis" id="kpis" aria-label="Month summary"></section>
+
+  <section class="grid2">
+    <div class="card"><div class="sec-head"><h2>By coordinator</h2><span class="hint">Select one to filter the page</span></div><div id="coords"></div></div>
+    <div class="card"><div class="sec-head"><h2>Daily surrenders</h2><span class="hint" id="dailyHint">Surrenders per day</span></div><div class="chart-wrap" id="daily"></div><div class="caption" id="dailyCap"></div></div>
+  </section>
+
+  <section class="card">
+    <div class="table-head">
+      <div><h2>All surrenders</h2><div class="sub" id="showing"></div></div>
+      <div class="controls">
+        <label class="sr" for="sortSel">Sort</label>
+        <select id="sortSel"><option value="date">Sort: by date</option><option value="client">Sort: by client</option><option value="coord">Sort: by coordinator</option><option value="matter">Sort: by matter #</option></select>
+        <label class="sr" for="q">Search</label>
+        <input type="search" id="q" placeholder="Matter # or client">
+      </div>
+    </div>
+    <div id="tableWrap"></div>
+  </section>
+
+  <div class="caption" id="sourceNote">Source: HubSpot deals, sent to this site by a HubSpot workflow whenever a deal changes. A month counts deals marked Surrendered = Yes with a Surrender Date in that month. Coordinator = HubSpot Surrender Coordinator.</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- config ---------- */
+const API = "/api";
+const PORTAL = "8854200";
+const DEAL_URL = id => "https://app.hubspot.com/contacts/" + PORTAL + "/record/0-3/" + id;
+const PIPELINES = {"6906894":"Document Gathering","77637672":"Settlement","147213186":"Pre-Litigation","70128010":"Litigation"};
+const STAGES = {"148040364":"Financials","148048054":"Pending Disbursement","148048052":"Pending 998","241154734":"Update Financials","148011374":"Pending Release","148011372":"Pending Surrender","1212471581":"Need to Coordinate Surrender","1072094529":"Pending Settlement Funds (BB)","148011373":"Pending Settlement Funds (CK)","148011378":"Case Settled","148011377":"Fee Motion","1084046343":"Closed","155189871":"Buyback Pending","135842574":"Case in Litigation","1066877503":"Discovery","1067020146":"Trial Preparation","1066995981":"Case in Arbitration"};
+const REFRESH_MS = 10 * 60 * 1000;
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTH = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+/* ---------- dates ---------- */
+const pad = n => String(n).padStart(2,"0");
+const iso = (y,m,d) => y + "-" + pad(m+1) + "-" + pad(d); // m is 0-based
+const today = new Date(); today.setHours(0,0,0,0);
+const TODAY = iso(today.getFullYear(), today.getMonth(), today.getDate());
+const addDays = (dt,n) => { const x = new Date(dt); x.setDate(x.getDate()+n); return x; };
+const isoOf = dt => iso(dt.getFullYear(), dt.getMonth(), dt.getDate());
+const parseIso = s => { const p = s.split("-").map(Number); return new Date(p[0], p[1]-1, p[2]); };
+const shortIso = s => { const d = parseIso(s); return MON[d.getMonth()] + " " + d.getDate(); };
+const longIso = s => { const d = parseIso(s); return DOW[d.getDay()] + ", " + MON[d.getMonth()] + " " + d.getDate(); };
+const UP_END = isoOf(addDays(today, 6));
+
+function nthWeekday(y,m,wd,n){ const d = new Date(y,m,1); let c = 0; while(true){ if(d.getDay()===wd && ++c===n) return d.getDate(); d.setDate(d.getDate()+1); } }
+function lastWeekday(y,m,wd){ const d = new Date(y,m+1,0); while(d.getDay()!==wd) d.setDate(d.getDate()-1); return d.getDate(); }
+function observed(y,m,d){ const x = new Date(y,m,d); if(x.getDay()===6) x.setDate(x.getDate()-1); else if(x.getDay()===0) x.setDate(x.getDate()+1); return isoOf(x); }
+const holCache = {};
+function holidays(y){
+  if(holCache[y]) return holCache[y];
+  const h = {};
+  const add = (s,n) => { h[s] = n; };
+  add(observed(y,0,1),"New Year's Day"); add(iso(y,0,nthWeekday(y,0,1,3)),"Martin Luther King Jr. Day");
+  add(iso(y,1,nthWeekday(y,1,1,3)),"Presidents' Day"); add(iso(y,4,lastWeekday(y,4,1)),"Memorial Day");
+  add(observed(y,5,19),"Juneteenth"); add(observed(y,6,4),"Independence Day");
+  add(iso(y,8,nthWeekday(y,8,1,1)),"Labor Day"); add(observed(y,10,11),"Veterans Day");
+  add(iso(y,10,nthWeekday(y,10,4,4)),"Thanksgiving"); add(observed(y,11,25),"Christmas Day");
+  return holCache[y] = h;
+}
+const holidayName = s => holidays(Number(s.slice(0,4)))[s] || null;
+const isWorkday = dt => dt.getDay()!==0 && dt.getDay()!==6 && !holidayName(isoOf(dt));
+
+/* 13 rolling months ending with the current month */
+const months = [];
+for(let i=12;i>=0;i--){
+  const d = new Date(today.getFullYear(), today.getMonth()-i, 1);
+  const y = d.getFullYear(), m = d.getMonth(), last = new Date(y,m+1,0).getDate();
+  months.push({ id: y+"-"+pad(m+1), y, m, first: iso(y,m,1), last: iso(y,m,last), days: last, short: MON[m]+" "+String(y).slice(2), label: MONTH[m]+" "+y, count: null, countErr: null });
+}
+const WINDOW_START = months[0].first;
+const YESTERDAY = isoOf(addDays(today,-1));
+
+/* ---------- state ---------- */
+const S = { sel: months.length-1, rows: {}, pd: {status:"loading"}, up: {status:"loading"}, owners: {}, coord: null, q: "", sort: "date", open: null, listView: null, lastStored: null, pageErr: null };
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function errMessage(e){
+  if(!e) return "Couldn't load the data.";
+  if(e.offline) return "Couldn't reach the website's server. Check your connection; showing the last data received.";
+  if(e.status === 401 || e.status === 403) return "Your sign-in has expired. Reload the page to sign in again.";
+  if(e.status === 500 && /STORAGE_CONNECTION_STRING/.test(e.message || "")) return "The site isn't set up yet: STORAGE_CONNECTION_STRING is missing from the Azure app settings.";
+  return "The site's data service didn't respond (" + (e.message || "error") + "). Showing the last data loaded; it will try again on the next refresh.";
+}
+const isDenial = e => !!e && (e.status === 401 || e.status === 403 || /STORAGE_CONNECTION_STRING/.test(e.message || ""));
+const ago = ts => { if(!ts) return ""; const s = Math.max(0, Math.round((Date.now()-ts)/1000)); if(s < 60) return "just now"; const m = Math.round(s/60); if(m < 60) return m + " min ago"; const h = Math.round(m/60); return h + " hr ago"; };
+function noteStored(ts){ if(ts && (!S.lastStored || ts > S.lastStored)) S.lastStored = ts; }
+async function api(path, refresh){
+  let res;
+  try{ res = await fetch(API + path + (refresh ? (path.includes("?") ? "&" : "?") + "refresh=1" : ""), { credentials: "same-origin", headers: { Accept: "application/json" } }); }
+  catch(e){ throw { offline: true, message: String(e) }; }
+  if(res.redirected || res.status === 401 || res.status === 403){ throw { status: 401, message: "signed out" }; }
+  let body = null; try{ body = await res.json(); }catch(e){}
+  if(!res.ok) throw { status: res.status, message: (body && body.error) || res.statusText, hubspotStatus: body && body.hubspotStatus };
+  return body;
+}
+function learnOwners(rows){ rows.forEach(r => { if(r.coordId) S.owners[r.coordId] = r.coord || ("Coordinator #" + r.coordId); }); }
+const coordName = r => r.coordId ? (r.coord || S.owners[r.coordId] || "Coordinator #" + r.coordId) : null;
+const yesNo = v => v === "true" ? "Yes" : v === "false" ? "No" : (v || "");
+
+/* ---------- data from the site's API ---------- */
+async function loadStatus(refresh){
+  ["pd","up"].forEach(k => { S[k] = Object.assign({}, S[k], { status: S[k].list ? "refreshing" : "loading" }); });
+  renderStatus();
+  try{
+    const d = await api("/status", refresh);
+    S.pd = { status:"ok", list: d.pastDue, storedAt: d.fetchedAt };
+    S.up = { status:"ok", list: d.upcoming, storedAt: d.fetchedAt };
+    learnOwners(d.pastDue.concat(d.upcoming)); noteStored(d.fetchedAt); S.pageErr = null;
+  }catch(e){
+    ["pd","up"].forEach(k => { S[k] = isDenial(e) ? { status:"error", err: e } : Object.assign({}, S[k], { status: S[k].list ? "stale" : "error", err: e }); });
+    if(isDenial(e)) S.pageErr = e;
+  }
+  renderAll();
+}
+async function loadCounts(refresh){
+  try{
+    const d = await api("/counts", refresh);
+    const map = {}; d.months.forEach(m => { map[m.id] = m.count; });
+    months.forEach(m => { if(m.id in map) m.count = map[m.id]; m.countErr = null; });
+    noteStored(d.fetchedAt);
+  }catch(e){
+    months.forEach(m => { m.countErr = e; });
+    if(isDenial(e)) S.pageErr = e;
+  }
+  renderAll();
+}
+async function loadMonth(idx, refresh){
+  const mo = months[idx];
+  const cur = S.rows[mo.id];
+  if(cur && cur.status === "ok" && !refresh) return;
+  S.rows[mo.id] = Object.assign({}, cur, { status: cur && cur.list ? "refreshing" : "loading" });
+  renderAll();
+  try{
+    const d = await api("/month?m=" + mo.id, refresh);
+    S.rows[mo.id] = { status:"ok", list: d.rows, storedAt: d.fetchedAt };
+    mo.count = d.rows.length;
+    learnOwners(d.rows); noteStored(d.fetchedAt);
+  }catch(e){
+    S.rows[mo.id] = Object.assign({}, S.rows[mo.id], { status: (S.rows[mo.id] && S.rows[mo.id].list && !isDenial(e)) ? "stale" : "error", err: e });
+    if(isDenial(e)) S.pageErr = e;
+  }
+  renderAll();
+}
+
+/* ---------- rendering ---------- */
+let renderPending = false;
+function scheduleRender(){ if(renderPending) return; renderPending = true; requestAnimationFrame(() => { renderPending = false; renderAll(); }); }
+
+function renderLive(){
+  const dot = $("liveDot"), txt = $("liveText");
+  const anyStale = [S.pd, S.up, S.rows[months[S.sel].id] || {}].some(x => x.status === "stale");
+  const anyLoading = [S.pd, S.up, S.rows[months[S.sel].id] || {}].some(x => x.status === "loading" || x.status === "refreshing");
+  if(S.pageErr){ dot.className = "dot stale"; txt.textContent = "Needs attention"; return; }
+  dot.className = "dot " + (anyStale ? "stale" : "live");
+  if(!S.lastStored){ dot.className = "dot stale"; txt.textContent = anyLoading ? "Loading…" : "No updates received from HubSpot yet"; return; }
+  txt.textContent = (anyStale ? "Showing last data loaded · " : "") + "Last HubSpot update " + ago(S.lastStored) + (anyLoading ? " · refreshing…" : "");
+}
+
+function renderPageErr(){
+  const box = $("pageErr");
+  if(S.pageErr){ box.innerHTML = '<div class="note" role="alert">' + esc(errMessage(S.pageErr)) + '</div>'; }
+  else box.innerHTML = "";
+}
+
+function statusCard(key){
+  const st = S[key], isPd = key === "pd";
+  const n = st.list ? st.list.length : null;
+  const sub = isPd
+    ? "Surrender date before " + shortIso(TODAY) + " (since " + shortIso(WINDOW_START) + ", " + WINDOW_START.slice(0,4) + ") · Surrendered ≠ Yes · excludes Case Settled, Fee Motion, Closed and the Pre-Litigation pipeline"
+    : "Surrender date " + shortIso(TODAY) + " – " + shortIso(UP_END) + " · Surrendered ≠ Yes · same exclusions";
+  const open = S.listView === key;
+  let html = '<div class="top"><span class="lbl">' + (isPd ? "Surrenders past due" : "Upcoming in the next 7 days") + '</span>' +
+    (n != null ? '<button class="linkbtn" type="button" data-show="' + key + '" aria-expanded="' + open + '">' + (open ? "Hide list" : "Show list") + '</button>' : "") + '</div>' +
+    '<div class="num">' + (n != null ? n : "—") + '</div><div class="sub">' + esc(sub) + '</div>';
+  if(st.status === "stale") html += '<div class="note">' + esc(errMessage(st.err)) + '</div>';
+  if(st.status === "error" && !isDenial(st.err)) html += '<div class="note">' + esc(errMessage(st.err)) + '</div>';
+  return html;
+}
+function renderStatus(){
+  ["pd","up"].forEach(k => { const el = $(k + "Card"); el.innerHTML = statusCard(k); el.setAttribute("aria-busy", S[k].status === "loading" ? "true" : "false"); });
+  const box = $("statusList");
+  if(!S.listView || !S[S.listView].list){ box.hidden = true; box.innerHTML = ""; return; }
+  const k = S.listView, list = S[k].list;
+  box.hidden = false;
+  let h = '<div class="sec-head"><h2>' + (k === "pd" ? "Surrenders past due" : "Upcoming surrenders") + ' (' + list.length + ')</h2><button class="linkbtn" type="button" data-show="' + k + '">Close</button></div>';
+  if(!list.length){ box.innerHTML = h + '<div class="empty">' + (k === "pd" ? "Nothing past due." : "No surrenders scheduled in the next 7 days.") + '</div>'; return; }
+  h += '<div class="tbl-scroll"><table><thead><tr><th>Matter</th><th>Client</th><th>Surrender date</th><th>Time</th><th>Coordinator</th><th>Stage</th></tr></thead><tbody>';
+  list.forEach(r => {
+    const c = coordName(r);
+    h += '<tr><td class="mat mono">' + esc(r.matter) + '</td><td class="cli"><a href="' + DEAL_URL(esc(r.id)) + '" target="_blank" rel="noopener">' + esc(r.client) + '</a></td><td class="mono">' + esc(r.date ? longIso(r.date) : "—") + '</td><td>' + esc(r.time || "—") + '</td><td>' + (c ? esc(c) : '<span class="un-tag">Unassigned</span>') + '</td><td>' + esc(STAGES[r.stage] || (r.stage ? "Stage " + r.stage : "—")) + '</td></tr>';
+  });
+  box.innerHTML = h + '</tbody></table></div>';
+}
+
+function renderTabs(){
+  const max = Math.max(1, ...months.map(m => m.count || 0));
+  $("tabs").innerHTML = months.map((m,i) => {
+    const hgt = m.count ? Math.max(6, Math.round(m.count / max * 100)) : 0;
+    return '<button type="button" class="tab" data-tab="' + i + '" aria-current="' + (i === S.sel ? "page" : "false") + '" aria-label="' + esc(m.label) + ': ' + (m.count == null ? "loading" : m.count + " surrenders") + '">' +
+      '<span class="barbox"><span class="bar" style="height:' + hgt + '%"></span></span><span class="cnt">' + (m.count == null ? "…" : m.count) + '</span><span class="mlbl">' + esc(m.short) + '</span></button>';
+  }).join("");
+  $("rangeNote").textContent = months[0].label + " – " + months[months.length-1].label + " · current month to date";
+  const errs = months.filter(m => m.countErr && !isDenial(m.countErr));
+  $("countsErr").innerHTML = errs.length && !S.pageErr ? '<div class="note">' + esc(errMessage(errs[0].countErr)) + '</div>' : "";
+}
+
+function monthRows(){ const r = S.rows[months[S.sel].id]; return r && r.list ? r.list : null; }
+function filteredRows(){
+  let rows = monthRows() || [];
+  if(S.coord === "__un") rows = rows.filter(r => !r.coordId);
+  else if(S.coord) rows = rows.filter(r => r.coordId === S.coord);
+  return rows;
+}
+
+function renderKpis(){
+  const mo = months[S.sel], rows = monthRows(), box = $("kpis");
+  const st = S.rows[mo.id] || {};
+  $("title").textContent = mo.label;
+  if(!rows){
+    box.innerHTML = '<div class="card kpi" style="grid-column:1/-1"><div class="empty">' + (st.status === "error" ? esc(errMessage(st.err)) : "Loading " + esc(mo.label) + " from HubSpot…") + '</div></div>';
+    return;
+  }
+  const fr = filteredRows();
+  const endDate = mo.last < TODAY ? parseIso(mo.last) : today;
+  let bdays = 0;
+  for(let d = parseIso(mo.first); d <= endDate; d = addDays(d,1)) if(isWorkday(d)) bdays++;
+  const byDay = {}; fr.forEach(r => { if(r.date) byDay[r.date] = (byDay[r.date] || 0) + 1; });
+  let busy = null; Object.keys(byDay).forEach(d => { if(!busy || byDay[d] > byDay[busy]) busy = d; });
+  const byC = {}; rows.forEach(r => { if(r.coordId) byC[r.coordId] = (byC[r.coordId] || 0) + 1; });
+  let top = null; Object.keys(byC).forEach(c => { if(!top || byC[c] > byC[top]) top = c; });
+  const un = rows.filter(r => !r.coordId);
+  const filt = S.coord ? (S.coord === "__un" ? "Unassigned" : (S.owners[S.coord] || "Coordinator #" + S.coord)) : null;
+  const span = mo.last < TODAY ? MON[mo.m] + " 1 – " + MON[mo.m] + " " + mo.days : MON[mo.m] + " 1 – " + shortIso(TODAY);
+  box.innerHTML =
+    '<div class="card kpi accent"><div class="lbl">Total surrenders' + (filt ? " · " + esc(filt) : "") + '</div><div class="val">' + fr.length + '</div><div class="sub">Marked Surrendered, ' + esc(span) + '</div></div>' +
+    '<div class="card kpi"><div class="lbl">Avg per business day</div><div class="val">' + (bdays ? (fr.length / bdays).toFixed(1) : "—") + '</div><div class="sub">Over ' + bdays + ' business day' + (bdays === 1 ? "" : "s") + '</div></div>' +
+    '<div class="card kpi"><div class="lbl">Busiest day</div><div class="val">' + (busy ? byDay[busy] : "—") + '</div><div class="sub">' + (busy ? esc(longIso(busy)) : "No surrenders yet") + '</div></div>' +
+    '<div class="card kpi"><div class="lbl">Top coordinator</div><div class="val">' + (top ? byC[top] : "—") + '</div><div class="sub">' + (top ? esc(S.owners[top] || "Coordinator #" + top) : "None yet") + '</div></div>' +
+    '<div class="card kpi ' + (un.length ? "warn" : "") + '"><div class="lbl">No coordinator listed</div><div class="val">' + un.length + '</div><div class="sub">' + (un.length === 0 ? "Every surrender has a coordinator" : un.length <= 3 ? esc(un.map(r => r.client).join(", ")) : "Select “Unassigned” to see them") + '</div></div>';
+}
+
+function renderCoords(){
+  const rows = monthRows(), box = $("coords");
+  if(!rows){ box.innerHTML = '<div class="empty">Waiting for data…</div>'; return; }
+  const byC = {}; let un = 0;
+  rows.forEach(r => { if(r.coordId) byC[r.coordId] = (byC[r.coordId] || 0) + 1; else un++; });
+  const list = Object.keys(byC).map(id => ({ id, n: byC[id], name: S.owners[id] || "Coordinator #" + id })).sort((a,b) => b.n - a.n || a.name.localeCompare(b.name));
+  const max = Math.max(1, ...list.map(x => x.n), un);
+  if(!list.length && !un){ box.innerHTML = '<div class="empty">No surrenders this month yet.</div>'; return; }
+  let h = list.map(x => '<button type="button" class="coord" data-coord="' + esc(x.id) + '" aria-pressed="' + (S.coord === x.id) + '"><span class="row"><span>' + esc(x.name) + '</span><span class="mono">' + x.n + '</span></span><span class="track"><span class="fill" style="width:' + (x.n / max * 100).toFixed(1) + '%;display:block"></span></span></button>').join("");
+  if(un) h += '<button type="button" class="coord un" data-coord="__un" aria-pressed="' + (S.coord === "__un") + '"><span class="row"><span>Unassigned</span><span class="mono">' + un + '</span></span><span class="track"><span class="fill" style="width:' + (un / max * 100).toFixed(1) + '%;display:block"></span></span></button>';
+  box.innerHTML = h;
+}
+
+function renderDaily(){
+  const mo = months[S.sel], rows = monthRows(), box = $("daily");
+  const cap = $("dailyCap");
+  if(!rows){ box.innerHTML = '<div class="empty">Waiting for data…</div>'; cap.textContent = ""; return; }
+  const all = {}, sel = {};
+  rows.forEach(r => { if(r.date) all[r.date] = (all[r.date] || 0) + 1; });
+  filteredRows().forEach(r => { if(r.date) sel[r.date] = (sel[r.date] || 0) + 1; });
+  const max = Math.max(1, ...Object.values(all));
+  const W = 640, H = 240, top = 22, base = 190, bw = W / mo.days;
+  let svg = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Surrenders per day in ' + esc(mo.label) + '">';
+  svg += '<line x1="0" y1="' + base + '" x2="' + W + '" y2="' + base + '" stroke="var(--line)"/>';
+  const hols = [];
+  for(let d = 1; d <= mo.days; d++){
+    const ds = iso(mo.y, mo.m, d), dt = parseIso(ds), work = isWorkday(dt), hn = holidayName(ds);
+    if(hn && dt.getDay() !== 0 && dt.getDay() !== 6) hols.push(MON[mo.m] + " " + d + " " + hn);
+    const x = (d-1) * bw, cx = x + bw/2, w = Math.max(4, bw * 0.62);
+    const a = all[ds] || 0, s = S.coord ? (sel[ds] || 0) : a;
+    const ha = a / max * (base - top), hs = s / max * (base - top);
+    if(S.coord && a) svg += '<rect x="' + (cx - w/2).toFixed(1) + '" y="' + (base - ha).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + ha.toFixed(1) + '" fill="var(--bar)" rx="1.5"/>';
+    if(s) svg += '<rect x="' + (cx - w/2).toFixed(1) + '" y="' + (base - hs).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + hs.toFixed(1) + '" fill="' + (work ? "var(--accent)" : "var(--bar)") + '" rx="1.5"><title>' + esc(longIso(ds)) + ': ' + s + '</title></rect>';
+    if(s) svg += '<text x="' + cx.toFixed(1) + '" y="' + (base - hs - 5).toFixed(1) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--muted)">' + s + '</text>';
+    const col = work ? "var(--ink)" : "var(--faint)";
+    svg += '<text x="' + cx.toFixed(1) + '" y="' + (base + 16) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="' + col + '">' + d + '</text>';
+    svg += '<text x="' + cx.toFixed(1) + '" y="' + (base + 30) + '" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="9" fill="' + col + '">' + "SMTWTFS"[dt.getDay()] + '</text>';
+  }
+  box.innerHTML = svg + '</svg>';
+  $("dailyHint").textContent = S.coord ? "Selected coordinator vs. all surrenders" : "Surrenders per day";
+  cap.textContent = (hols.length ? hols.join(", ") + ". " : "") + "Weekends and holidays are faded.";
+}
+
+function renderTable(){
+  const rows = monthRows(), wrap = $("tableWrap");
+  if(!rows){ wrap.innerHTML = '<div class="empty">Waiting for data…</div>'; $("showing").textContent = ""; return; }
+  const q = S.q.trim().toLowerCase();
+  let list = filteredRows().filter(r => !q || r.matter.toLowerCase().includes(q) || r.client.toLowerCase().includes(q) || r.deal.toLowerCase().includes(q));
+  const cmp = {
+    date: (a,b) => a.date.localeCompare(b.date) || a.client.localeCompare(b.client),
+    client: (a,b) => a.client.localeCompare(b.client),
+    coord: (a,b) => (coordName(a) || "~").localeCompare(coordName(b) || "~") || a.date.localeCompare(b.date),
+    matter: (a,b) => a.matter.localeCompare(b.matter, undefined, { numeric: true })
+  }[S.sort];
+  list = list.slice().sort(cmp);
+  $("showing").textContent = "Showing " + list.length + " of " + rows.length;
+  if(!list.length){ wrap.innerHTML = '<div class="empty">No surrenders match this filter.</div>'; return; }
+  let h = '<div class="tbl-scroll"><table><thead><tr><th>Matter</th><th>Client</th><th>Date</th><th>Coordinator</th></tr></thead><tbody>';
+  list.forEach(r => {
+    const c = coordName(r), open = S.open === r.id;
+    h += '<tr class="r" tabindex="0" data-row="' + esc(r.id) + '" aria-expanded="' + open + '"><td class="mat mono">' + esc(r.matter) + '</td><td class="cli">' + esc(r.client) + '</td><td class="mono">' + esc(r.date ? longIso(r.date) : "—") + '</td><td>' + (c ? esc(c) : '<span class="un-tag">Unassigned</span>') + '</td></tr>';
+    if(open){
+      const f = (k,v,cls) => '<div class="' + (cls || "") + '"><div class="k">' + k + '</div><div>' + (v ? esc(v) : "—") + '</div></div>';
+      h += '<tr class="detail"><td colspan="4"><div class="dgrid">' +
+        f("Deal", r.deal, "wide") + f("Surrender time", r.time) + f("Surrender packet completed", yesNo(r.packet)) + f("Paid at surrender", yesNo(r.paid)) +
+        f("Handling attorney", r.atty) + f("Stage", (PIPELINES[r.pipeline] ? PIPELINES[r.pipeline] + " · " : "") + (STAGES[r.stage] || r.stage)) +
+        (r.notes ? f("Surrender notes", r.notes, "wide") : "") +
+        '<div class="wide"><a href="' + DEAL_URL(esc(r.id)) + '" target="_blank" rel="noopener">Open in HubSpot</a></div></div></td></tr>';
+    }
+  });
+  wrap.innerHTML = h + '</tbody></table></div>';
+}
+
+function renderAll(){ renderLive(); renderPageErr(); renderStatus(); renderTabs(); renderKpis(); renderCoords(); renderDaily(); renderTable(); }
+
+/* ---------- events ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-tab],[data-coord],[data-show],[data-row]");
+  if(!t) return;
+  if(t.dataset.tab != null){ S.sel = Number(t.dataset.tab); S.coord = null; S.open = null; renderAll(); loadMonth(S.sel); }
+  else if(t.dataset.coord != null){ S.coord = S.coord === t.dataset.coord ? null : t.dataset.coord; S.open = null; renderAll(); }
+  else if(t.dataset.show != null){ S.listView = S.listView === t.dataset.show ? null : t.dataset.show; renderStatus(); if(S.listView) $("statusList").scrollIntoView({ behavior:"smooth", block:"nearest" }); }
+  else if(t.dataset.row != null){ S.open = S.open === t.dataset.row ? null : t.dataset.row; renderTable(); }
+});
+document.addEventListener("keydown", e => { if((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("tr.r")){ e.preventDefault(); e.target.click(); } });
+$("q").addEventListener("input", e => { S.q = e.target.value; renderTable(); });
+$("sortSel").addEventListener("change", e => { S.sort = e.target.value; renderTable(); });
+$("refreshBtn").addEventListener("click", async () => {
+  const b = $("refreshBtn"); b.disabled = true; b.textContent = "Refreshing…";
+  S.pageErr = null; S.lastStored = null;
+  await Promise.all([ loadStatus(true), loadCounts(true), loadMonth(S.sel, true) ]);
+  b.disabled = false; b.textContent = "Refresh";
+});
+setInterval(() => { renderLive(); }, 30000);
+
+/* ---------- boot ---------- */
+renderAll();
+loadStatus(); loadCounts(); loadMonth(S.sel);
+// Re-check every 10 minutes while the page is open.
+setInterval(() => { if(document.hidden) return; loadStatus(true); loadCounts(); loadMonth(S.sel, true); }, REFRESH_MS);
+})();
+</script>
+</body>
+</html>

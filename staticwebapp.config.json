@@ -1,0 +1,30 @@
+{
+  "auth": {
+    "rolesSource": "/api/GetRoles",
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "userDetailsClaim": "preferred_username",
+        "registration": {
+          "openIdIssuer": "https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0",
+          "clientIdSettingName": "AAD_CLIENT_ID",
+          "clientSecretSettingName": "AAD_CLIENT_SECRET"
+        }
+      }
+    }
+  },
+  "routes": [
+    { "route": "/api/ingest", "methods": ["POST"], "allowedRoles": ["anonymous"] },
+    { "route": "/api/GetRoles", "allowedRoles": ["anonymous"] },
+    { "route": "/.auth/login/github", "statusCode": 404 },
+    { "route": "/.auth/login/twitter", "statusCode": 404 },
+    { "route": "/.auth/*", "allowedRoles": ["anonymous"] },
+    { "route": "/no-access.html", "allowedRoles": ["anonymous"] },
+    { "route": "/*", "allowedRoles": ["member"] }
+  ],
+  "responseOverrides": {
+    "401": { "redirect": "/.auth/login/aad?post_login_redirect_uri=.referrer", "statusCode": 302 },
+    "403": { "rewrite": "/no-access.html" }
+  },
+  "globalHeaders": { "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store" },
+  "platform": { "apiRuntime": "node:20" }
+}
