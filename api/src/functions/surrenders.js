@@ -90,7 +90,8 @@ function flatten(o) {
 function toEntity(p) {
   const cm = String(p.clio_matter || "").trim();
   const mm = /^(\d+)\s*-\s*(.+)$/.exec(cm);
-  let client = mm ? mm[2] : "";
+  // Client: HubSpot "Plaintiff Name Short"; falls back to the name in the Clio matter, then the deal name.
+  let client = String(p.plaintiff_name_short || "").trim() || (mm ? mm[2] : "");
   if (!client && p.dealname) client = String(p.dealname).split(/\s+V\.?\s+/i)[0].replace(/,\s*$/, "");
   const rawC = p.surrender_coodinator == null ? "" : String(p.surrender_coodinator).split(";")[0].trim();
   const coordId = /^\d+$/.test(rawC) ? rawC : (rawC ? "name:" + rawC : "");
@@ -99,7 +100,7 @@ function toEntity(p) {
   const sur = String(p.surrendered == null ? "" : p.surrendered).toLowerCase();
   return {
     partitionKey: "deal", rowKey: String(p.hs_object_id),
-    matter: mm ? mm[1] : (cm || "—"), client: client || "—", deal: String(p.dealname || ""),
+    matter: cm || "—", client: client || "—", deal: String(p.dealname || ""),
     date: normDate(p.surrender_date), time: String(p.surrender_time || ""),
     coordId, coord, atty: String(p.handling_attorney || ""), notes: String(p.surrender_notes || "").slice(0, 4000),
     stage: STAGE_BY_LABEL[stage.toLowerCase()] || stage, pipeline: PIPELINE_BY_LABEL[pipeline.toLowerCase()] || pipeline,
