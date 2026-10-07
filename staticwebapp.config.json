@@ -5,7 +5,7 @@
       "azureActiveDirectory": {
         "userDetailsClaim": "preferred_username",
         "registration": {
-          "openIdIssuer": "https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0",
+          "openIdIssuer": "https://login.microsoftonline.com/ddedbe9f-044c-41c3-aa9b-84661e3f2083/v2.0",
           "clientIdSettingName": "AAD_CLIENT_ID",
           "clientSecretSettingName": "AAD_CLIENT_SECRET"
         }
