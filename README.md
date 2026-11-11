@@ -50,12 +50,12 @@ Use the same storage account as the Altman Pod site or create one (Storage accou
 The easiest way is to **clone the Altman Pod workflow** and change it, so it matches what already works. The settings to end up with:
 
 - **Type:** deal-based workflow, named "Surrenders website feed".
-- **Enrollment:** deals where **Surrender Date is known**. Turn on **re-enrollment** so a deal is sent again when any of these change: Surrender Date, Surrendered, Surrender Coordinator, Deal Stage, Pipeline, Surrender Time, Surrender Packet Completed, Paid at Surrender, Surrender Notes, Handling Attorney. When you turn the workflow on, choose to **enroll existing deals** that meet the criteria. That loads the history.
+- **Enrollment:** deals where **Surrender Date is known**. Turn on **re-enrollment** so a deal is sent again when any of these change: Surrender Date, Surrendered, Surrender Coordinator, Deal Stage, Pipeline, Surrender Time, Surrender Packet Completed, Paid at Surrender, Surrender Notes, Handling Attorney, Fees by Motion, Tasked FBM. When you turn the workflow on, choose to **enroll existing deals** that meet the criteria. That loads the history.
 - **Action:** **Send a webhook**
   - Method: **POST**
   - URL: `https://<site address>/api/ingest`
   - Authentication: **API key**, key name `x-webhook-secret`, value = your `WEBHOOK_SECRET`, sent in the request header. If that option isn't offered, use the URL `https://<site address>/api/ingest?secret=<your WEBHOOK_SECRET>` instead.
-  - Request body: **customize** and include these deal properties, using these names as keys: `hs_object_id`, `clio_matter`, `dealname`, `surrender_date`, `surrender_time`, `surrendered`, `surrender_coodinator`, `surrender_coordinator_text`, `dealstage`, `pipeline`, `handling_attorney`, `surrender_notes`, `surrender_packet_completed`, `paid_at_surrender`. If customizing isn't possible, the default full-record body also works.
+  - Request body: **customize** and include these deal properties, using these names as keys: `hs_object_id`, `clio_matter`, `dealname`, `surrender_date`, `surrender_time`, `surrendered`, `surrender_coodinator`, `surrender_coordinator_text`, `dealstage`, `pipeline`, `handling_attorney`, `surrender_notes`, `surrender_packet_completed`, `paid_at_surrender`, `fees_by_motion`, `tasked_fbm`. If customizing isn't possible, the default full-record body also works.
 
 ### 7. Test
 1. Open the site and sign in. The top right shows when the last HubSpot update arrived.

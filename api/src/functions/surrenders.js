@@ -68,7 +68,8 @@ const lastReceived = rows => rows.reduce((m, r) => (r.receivedAt && r.receivedAt
 const toRow = e => ({
   id: e.rowKey, matter: e.matter || "—", client: e.client || "—", deal: e.deal || "", date: e.date || "", time: e.time || "",
   coordId: e.coordId || "", coord: e.coord || "", atty: e.atty || "", notes: e.notes || "", stage: e.stage || "", pipeline: e.pipeline || "",
-  surrendered: e.surrendered || "", packet: e.packet || "", paid: e.paid || ""
+  surrendered: e.surrendered || "", packet: e.packet || "", paid: e.paid || "",
+  fbm: e.fbm || "", taskedFbm: e.taskedFbm || ""
 });
 
 /* ---------- incoming HubSpot webhook ---------- */
@@ -106,6 +107,8 @@ function toEntity(p) {
     stage: STAGE_BY_LABEL[stage.toLowerCase()] || stage, pipeline: PIPELINE_BY_LABEL[pipeline.toLowerCase()] || pipeline,
     surrendered: sur === "true" || sur === "yes" ? "true" : (sur === "false" || sur === "no" ? "false" : ""),
     packet: String(p.surrender_packet_completed || ""), paid: String(p.paid_at_surrender || ""),
+    fbm: String(p.fees_by_motion == null ? "" : p.fees_by_motion).trim(), // Fees by Motion: Yes / No
+    taskedFbm: String(p.tasked_fbm == null ? "" : p.tasked_fbm).trim(),   // Tasked FBM: Yes / N/A
     receivedAt: new Date().toISOString()
   };
 }

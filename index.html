@@ -369,19 +369,21 @@ function renderKpis(){
   const endDate = mo.last < TODAY ? parseIso(mo.last) : today;
   let bdays = 0;
   for(let d = parseIso(mo.first); d <= endDate; d = addDays(d,1)) if(isWorkday(d)) bdays++;
-  const byDay = {}; fr.forEach(r => { if(r.date) byDay[r.date] = (byDay[r.date] || 0) + 1; });
-  let busy = null; Object.keys(byDay).forEach(d => { if(!busy || byDay[d] > byDay[busy]) busy = d; });
+  const isYes = v => String(v || "").trim().toLowerCase() === "yes";
+  const fbm = fr.filter(r => isYes(r.fbm));
+  const tasked = fbm.filter(r => isYes(r.taskedFbm));
+  const untasked = fbm.filter(r => !isYes(r.taskedFbm));
   const byC = {}; rows.forEach(r => { if(r.coordId) byC[r.coordId] = (byC[r.coordId] || 0) + 1; });
   let top = null; Object.keys(byC).forEach(c => { if(!top || byC[c] > byC[top]) top = c; });
-  const un = rows.filter(r => !r.coordId);
   const filt = S.coord ? (S.coord === "__un" ? "Unassigned" : (S.owners[S.coord] || "Coordinator #" + S.coord)) : null;
   const span = mo.last < TODAY ? MON[mo.m] + " 1 – " + MON[mo.m] + " " + mo.days : MON[mo.m] + " 1 – " + shortIso(TODAY);
   box.innerHTML =
     '<div class="card kpi accent"><div class="lbl">Total surrenders' + (filt ? " · " + esc(filt) : "") + '</div><div class="val">' + fr.length + '</div><div class="sub">Marked Surrendered, ' + esc(span) + '</div></div>' +
     '<div class="card kpi"><div class="lbl">Avg per business day</div><div class="val">' + (bdays ? (fr.length / bdays).toFixed(1) : "—") + '</div><div class="sub">Over ' + bdays + ' business day' + (bdays === 1 ? "" : "s") + '</div></div>' +
-    '<div class="card kpi"><div class="lbl">Busiest day</div><div class="val">' + (busy ? byDay[busy] : "—") + '</div><div class="sub">' + (busy ? esc(longIso(busy)) : "No surrenders yet") + '</div></div>' +
     '<div class="card kpi"><div class="lbl">Top coordinator</div><div class="val">' + (top ? byC[top] : "—") + '</div><div class="sub">' + (top ? esc(S.owners[top] || "Coordinator #" + top) : "None yet") + '</div></div>' +
-    '<div class="card kpi ' + (un.length ? "warn" : "") + '"><div class="lbl">No coordinator listed</div><div class="val">' + un.length + '</div><div class="sub">' + (un.length === 0 ? "Every surrender has a coordinator" : un.length <= 3 ? esc(un.map(r => r.client).join(", ")) : "Select “Unassigned” to see them") + '</div></div>';
+    '<div class="card kpi"><div class="lbl">Fees by Motion</div><div class="val">' + fbm.length + '</div><div class="sub">' + (fr.length ? Math.round(fbm.length / fr.length * 100) + "% of surrenders" : "No surrenders yet") + '</div></div>' +
+    '<div class="card kpi ' + (untasked.length ? "warn" : "") + '"><div class="lbl">Tasked FBM</div><div class="val">' + tasked.length + (fbm.length ? '<span style="font-size:18px;color:var(--muted)"> / ' + fbm.length + '</span>' : "") + '</div><div class="sub">' +
+      (!fbm.length ? "No Fees by Motion matters" : !untasked.length ? "Every FBM matter is tasked" : "Not tasked: " + (untasked.length <= 3 ? esc(untasked.map(r => r.client).join(", ")) : untasked.length + " matters")) + '</div></div>';
 }
 
 function renderCoords(){
@@ -449,6 +451,7 @@ function renderTable(){
       const f = (k,v,cls) => '<div class="' + (cls || "") + '"><div class="k">' + k + '</div><div>' + (v ? esc(v) : "—") + '</div></div>';
       h += '<tr class="detail"><td colspan="4"><div class="dgrid">' +
         f("Deal", r.deal, "wide") + f("Surrender time", r.time) + f("Surrender packet completed", yesNo(r.packet)) + f("Paid at surrender", yesNo(r.paid)) +
+        f("Fees by Motion", r.fbm) + f("Tasked FBM", r.taskedFbm) +
         f("Handling attorney", r.atty) + f("Stage", (PIPELINES[r.pipeline] ? PIPELINES[r.pipeline] + " · " : "") + (STAGES[r.stage] || r.stage)) +
         (r.notes ? f("Surrender notes", r.notes, "wide") : "") +
         '<div class="wide"><a href="' + DEAL_URL(esc(r.id)) + '" target="_blank" rel="noopener">Open in HubSpot</a></div></div></td></tr>';
